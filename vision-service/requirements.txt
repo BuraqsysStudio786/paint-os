@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+opencv-python
+numpy
+pillow
+scikit-image
+pydantic
+requests
+
+# Optional local model backends:
+# torch
+# torchvision
+# ultralytics
+# segment-anything

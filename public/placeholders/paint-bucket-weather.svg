@@ -1,0 +1,11 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" fill="#EDF4F1"/>
+  <ellipse cx="450" cy="252" rx="242" ry="72" fill="#FDFBF6" stroke="#123C56" stroke-width="18"/>
+  <path d="M208 251h484l-42 665c-4 70-62 124-132 124H382c-70 0-128-54-132-124l-42-665Z" fill="#FDFBF6" stroke="#123C56" stroke-width="18"/>
+  <path d="M250 478h400v312H250z" fill="#123C56"/>
+  <path d="M250 478h400v78H250z" fill="#63A6B8"/>
+  <circle cx="450" cy="637" r="78" fill="#F6D365"/>
+  <text x="450" y="735" text-anchor="middle" font-family="Georgia, serif" font-size="56" fill="#FDFBF6">Weather Shield</text>
+  <text x="450" y="850" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="800" fill="#123C56">Exterior System</text>
+  <path d="M312 217c0-91 62-157 138-157s138 66 138 157" stroke="#123C56" stroke-width="22" stroke-linecap="round"/>
+</svg>

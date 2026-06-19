@@ -1,0 +1,11 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" fill="#F5F2EC"/>
+  <ellipse cx="450" cy="252" rx="242" ry="72" fill="#fff" stroke="#2F3437" stroke-width="18"/>
+  <path d="M208 251h484l-42 665c-4 70-62 124-132 124H382c-70 0-128-54-132-124l-42-665Z" fill="#fff" stroke="#2F3437" stroke-width="18"/>
+  <path d="M250 480h400v310H250z" fill="#D7D2C7"/>
+  <path d="M250 480h400v70H250z" fill="#2F3437"/>
+  <text x="450" y="640" text-anchor="middle" font-family="Georgia, serif" font-size="64" fill="#2F3437">Prime Seal</text>
+  <text x="450" y="710" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="6" fill="#2F3437">PREPARATION</text>
+  <text x="450" y="846" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" font-weight="800" fill="#2F3437">Wall Primer</text>
+  <path d="M312 217c0-91 62-157 138-157s138 66 138 157" stroke="#2F3437" stroke-width="22" stroke-linecap="round"/>
+</svg>

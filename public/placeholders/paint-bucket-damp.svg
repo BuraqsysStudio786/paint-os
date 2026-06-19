@@ -1,0 +1,9 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" fill="#EEF3F7"/>
+  <ellipse cx="450" cy="252" rx="242" ry="72" fill="#FDFBF6" stroke="#1E4D5C" stroke-width="18"/>
+  <path d="M208 251h484l-42 665c-4 70-62 124-132 124H382c-70 0-128-54-132-124l-42-665Z" fill="#FDFBF6" stroke="#1E4D5C" stroke-width="18"/>
+  <path d="M250 480h400v310H250z" fill="#1E4D5C"/>
+  <path d="M330 610c44-83 76-128 120-185 44 57 76 102 120 185 46 87-16 179-120 179s-166-92-120-179Z" fill="#8ED2E0"/>
+  <text x="450" y="854" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="800" fill="#1E4D5C">Damp Block</text>
+  <path d="M312 217c0-91 62-157 138-157s138 66 138 157" stroke="#1E4D5C" stroke-width="22" stroke-linecap="round"/>
+</svg>

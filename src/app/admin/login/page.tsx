@@ -1,0 +1,9 @@
+"use client";
+import { useActionState } from "react";
+import { LockKeyhole } from "lucide-react";
+import { loginAction } from "@/app/actions";
+
+export default function Page(){
+  const [state,action,pending]=useActionState(loginAction,null);
+  return <main className="grid min-h-screen bg-[#12271f] lg:grid-cols-2"><section className="hidden min-h-screen bg-[url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1800&q=90')] bg-cover bg-center lg:block"><div className="flex h-full flex-col justify-between bg-gradient-to-t from-[#12271f] via-transparent to-black/20 p-14 text-white"><strong className="tracking-[.2em]">PAINT WEBSITE OS</strong><div><p className="max-w-xl font-serif text-6xl leading-[1.02]">A digital showroom for every paint brand.</p><p className="mt-5 text-white/65">Manage colour, products, content, leads, and intelligent customer journeys.</p></div></div></section><section className="grid place-items-center px-5 py-16"><form action={action} className="w-full max-w-md rounded-2xl bg-[#F4F1EA] p-8 shadow-2xl"><span className="grid size-12 place-items-center rounded-full bg-[#183E32] text-[#C9A45C]"><LockKeyhole/></span><h1 className="mt-8 font-serif text-5xl text-[#17221D]">Welcome back.</h1><p className="mt-3 text-sm text-black/45">Sign in to your agency workspace.</p><label className="login-label mt-8">Email<input name="email" type="email" defaultValue="admin@paintos.local" required/></label><label className="login-label mt-4">Password<input name="password" type="password" defaultValue="Admin@12345" required/></label>{state?.error&&<p className="mt-4 text-sm font-bold text-red-700">{state.error}</p>}<button disabled={pending} className="mt-6 w-full rounded-full bg-[#183E32] px-5 py-3.5 text-sm font-black text-white">{pending?"Signing in…":"Sign in"}</button><p className="mt-5 text-center text-xs text-black/35">Seeded credentials are prefilled for local evaluation.</p></form></section></main>
+}
