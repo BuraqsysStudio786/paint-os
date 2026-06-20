@@ -30,8 +30,10 @@ def apply_paint(
     colour = np.full_like(image, hex_to_bgr(shade_hex))
     alpha = float(np.clip(opacity, 0.05, 0.95))
     if preserve_shadows:
-        luminance = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0
-        luminance = np.clip(0.38 + luminance[..., None] * 0.72, 0.25, 1.0)
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        luminance = lab[..., 0].astype(np.float32) / 255.0
+        luminance = cv2.GaussianBlur(luminance, (0, 0), 1.2)
+        luminance = np.clip(0.34 + luminance[..., None] * 0.76, 0.24, 1.0)
         colour = np.clip(colour.astype(np.float32) * luminance, 0, 255).astype(np.uint8)
 
     if finish in {"silk", "gloss"}:
@@ -43,6 +45,11 @@ def apply_paint(
         colour = np.clip(colour.astype(np.int16) + noise, 0, 255).astype(np.uint8)
 
     blended = cv2.addWeighted(image, 1.0 - alpha, colour, alpha, 0)
-    result = image.copy()
-    result[mask > 0] = blended[mask > 0]
-    return result
+    feather = cv2.GaussianBlur(mask, (0, 0), 0.8).astype(np.float32) / 255.0
+    feather = feather[..., None]
+    return np.clip(
+        image.astype(np.float32) * (1.0 - feather)
+        + blended.astype(np.float32) * feather,
+        0,
+        255,
+    ).astype(np.uint8)
