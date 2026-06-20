@@ -136,7 +136,8 @@ the PostgreSQL driver adapter, while Prisma CLI commands use `DIRECT_URL`.
    ```
 
    Gallery visualizer rooms and manual polygon editing continue to work.
-   Upload mode displays “AI wall detection unavailable in this demo.”
+   Upload mode displays: “AI wall detection unavailable in this demo. Manual
+   wall selection is available.”
 
 6. AI keys are optional. Keep `AI_PROVIDER="auto"`. If no provider is
    configured, or OpenAI returns quota/rate-limit errors, the app uses its
@@ -184,6 +185,28 @@ uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
 Health check: `http://localhost:8001/health`
+
+## Deploy the optional Python vision service to Render
+
+The repository includes `render.yaml`, so Render can deploy the service as a
+Blueprint. Alternatively, create a Python web service with:
+
+- Root directory: `vision-service`
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- Health check path: `/health`
+
+After Render reports the service as healthy, add these variables to Vercel:
+
+```env
+VISION_PROVIDER="auto"
+VISION_SERVICE_URL="https://your-service.onrender.com"
+ENABLE_LOCAL_VISION="true"
+```
+
+Redeploy the Vercel project after changing environment variables. The vision
+service is optional: if the URL is empty, the service is sleeping, or a request
+fails, gallery rooms and manual wall selection remain available.
 
 Seeded admin:
 

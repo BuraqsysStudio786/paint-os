@@ -1,6 +1,10 @@
 import "server-only";
 
-import { manualRequiredResult, type VisionResult } from "./mask-utils";
+import {
+  manualRequiredResult,
+  VISION_UNAVAILABLE_MESSAGE,
+  type VisionResult,
+} from "./mask-utils";
 import { runHuggingFaceVision } from "./providers/huggingface";
 import { runLocalPythonVision, type VisionInput } from "./providers/local-python";
 import { runReplicateVision } from "./providers/replicate";
@@ -23,7 +27,7 @@ export async function blobFromImageReference(reference: string): Promise<Blob> {
 }
 
 export async function segmentWalls(input: VisionInput & { imageUrl?: string }): Promise<VisionResult> {
-  const selected = (process.env.VISION_PROVIDER || "local").toLowerCase() as VisionProviderName;
+  const selected = (process.env.VISION_PROVIDER || "auto").toLowerCase() as VisionProviderName;
   const providers = selected === "auto"
     ? (["local", "replicate", "huggingface"] as const)
     : ([selected] as const);
@@ -50,6 +54,8 @@ export async function segmentWalls(input: VisionInput & { imageUrl?: string }): 
   return manualRequiredResult(
     input.width,
     input.height,
-    `AI wall detection unavailable in this demo. ${warnings.join(" ")}`.trim(),
+    warnings.length > 0
+      ? `${VISION_UNAVAILABLE_MESSAGE} ${warnings.join(" ")}`
+      : VISION_UNAVAILABLE_MESSAGE,
   );
 }

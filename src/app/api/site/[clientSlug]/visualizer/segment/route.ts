@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { VISION_UNAVAILABLE_MESSAGE } from "@/lib/vision/mask-utils";
 import { blobFromImageReference, segmentWalls } from "@/lib/vision/provider";
 import { z } from "zod";
 
@@ -66,7 +67,7 @@ export async function POST(request: Request, context: RouteContext<"/api/site/[c
       data: {
         clientId: client.id,
         type: "wall_segmentation",
-        inputJson: { width: data.width, height: data.height, requestedProvider: process.env.VISION_PROVIDER || "local" },
+        inputJson: { width: data.width, height: data.height, requestedProvider: process.env.VISION_PROVIDER || "auto" },
         outputJson: result,
       },
     });
@@ -76,7 +77,7 @@ export async function POST(request: Request, context: RouteContext<"/api/site/[c
         ...result,
         success: false,
         manualRequired: true,
-        message: "AI wall detection unavailable in this demo.",
+        message: VISION_UNAVAILABLE_MESSAGE,
       });
     }
     return Response.json({ ok: true, ...result });
@@ -85,7 +86,7 @@ export async function POST(request: Request, context: RouteContext<"/api/site/[c
       ok: true,
       success: false,
       manualRequired: true,
-      message: "AI wall detection unavailable in this demo.",
+      message: VISION_UNAVAILABLE_MESSAGE,
       provider: "manual",
       method: "manual-required",
       imageWidth: data.width || 1600,
@@ -108,7 +109,7 @@ export async function GET(_: Request, context: RouteContext<"/api/site/[clientSl
     return Response.json({
       ok: true,
       serviceUrl: "",
-      health: { ok: false, error: "AI wall detection unavailable in this demo." },
+      health: { ok: false, error: VISION_UNAVAILABLE_MESSAGE },
     });
   }
   try {

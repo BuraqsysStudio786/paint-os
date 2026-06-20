@@ -26,10 +26,13 @@ export const visionResultSchema = z.object({
 export type WallMask = z.infer<typeof wallMaskSchema>;
 export type VisionResult = z.infer<typeof visionResultSchema>;
 
+export const VISION_UNAVAILABLE_MESSAGE =
+  "AI wall detection unavailable in this demo. Manual wall selection is available.";
+
 export function manualRequiredResult(
   width = 1600,
   height = 1000,
-  warning = "Local AI detection unavailable. Use manual wall selection.",
+  warning = VISION_UNAVAILABLE_MESSAGE,
 ): VisionResult {
   return {
     success: false,

@@ -1006,7 +1006,7 @@ export function VisualizerStudio({
                   <Sparkles size={15} />{detecting ? "Detecting wall…" : "AI-assisted wall detect"}
                 </button>
               )}
-              {!visionEnabled && <p className="mt-3 border-l-2 border-[var(--accent)] bg-black/[.025] p-3 text-xs font-bold text-[var(--muted)]">AI wall detection unavailable in this demo. Gallery rooms and manual wall selection remain available.</p>}
+              {!visionEnabled && <p className="mt-3 border-l-2 border-[var(--accent)] bg-black/[.025] p-3 text-xs font-bold text-[var(--muted)]">AI wall detection unavailable in this demo. Manual wall selection is available.</p>}
               <p className="mt-3 text-xs font-bold text-[var(--muted)]">AI-assisted wall detection — please review wall edges.</p>
             </div>
           )}
