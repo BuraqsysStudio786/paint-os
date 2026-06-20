@@ -235,6 +235,44 @@ def _score_mask(
     return float(np.clip(score, 0.0, 0.96))
 
 
+def _quality_metrics(mask: np.ndarray, context: dict[str, Any]) -> dict[str, Any]:
+    pixels = mask > 0
+    total = max(float(np.count_nonzero(mask)), 1.0)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contour = max(contours, key=cv2.contourArea) if contours else None
+    perimeter = cv2.arcLength(contour, True) if contour is not None else 0.0
+    area = cv2.contourArea(contour) if contour is not None else 0.0
+    compactness = (
+        float(4.0 * np.pi * area / max(perimeter * perimeter, 1.0))
+        if contour is not None
+        else 0.0
+    )
+    approximated = (
+        cv2.approxPolyDP(contour, max(2.0, perimeter * 0.018), True)
+        if contour is not None
+        else []
+    )
+    floor_overlap = (
+        np.count_nonzero(mask[context["floorY"]:])
+        / total
+    )
+    return {
+        "areaRatio": round(mask_area_ratio(mask), 4),
+        "floorOverlapRatio": round(float(floor_overlap), 4),
+        "edgeDensity": round(
+            float(context["edgeDensity"][pixels].mean()) if np.any(pixels) else 1.0,
+            4,
+        ),
+        "texture": round(
+            float(context["texture"][pixels].mean()) if np.any(pixels) else 255.0,
+            3,
+        ),
+        "compactness": round(compactness, 4),
+        "polygonVertices": len(approximated),
+        "boundarySimplicity": round(1.0 / max(len(approximated), 1), 4),
+    }
+
+
 def _component_candidates(
     candidate_mask: np.ndarray,
     context: dict[str, Any],
@@ -619,14 +657,42 @@ def classical_wall_proposals(
         reverse=True,
     )
     selected: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, Any]] = []
     limit = max(1, min(expected_walls or 4, 4))
     threshold = float(np.clip(min_confidence, 0.35, 0.9))
+    top_confidence = float(candidates[0]["confidence"]) if candidates else 0.0
     for candidate in candidates:
+        metrics = _quality_metrics(candidate["mask"], context)
+        reason = ""
         if candidate["confidence"] < threshold:
-            continue
-        if any(mask_iou(candidate["mask"], other["mask"]) > 0.62 for other in selected):
+            reason = "confidence below threshold"
+        elif selected and candidate["confidence"] < max(0.58, threshold + 0.06):
+            reason = "secondary candidate too weak"
+        elif selected and candidate["confidence"] < top_confidence - 0.24:
+            reason = "secondary candidate too far below primary"
+        elif metrics["edgeDensity"] > 0.2 and metrics["texture"] > 20:
+            reason = "object-like texture and edge density"
+        elif metrics["polygonVertices"] > 18:
+            reason = "boundary too jagged"
+        elif any(mask_iou(candidate["mask"], other["mask"]) > 0.62 for other in selected):
+            reason = "duplicate overlap"
+        if reason:
+            diagnostics.append({
+                "source": candidate["source"],
+                "confidence": round(float(candidate["confidence"]), 3),
+                "accepted": False,
+                "reason": reason,
+                **metrics,
+            })
             continue
         selected.append(candidate)
+        diagnostics.append({
+            "source": candidate["source"],
+            "confidence": round(float(candidate["confidence"]), 3),
+            "accepted": True,
+            "reason": "accepted",
+            **metrics,
+        })
         if len(selected) >= limit:
             break
 
@@ -653,6 +719,9 @@ def classical_wall_proposals(
         "floorY": int(round(context["floorY"] / scale)),
         "floorDetected": bool(context["floorDetected"]),
         "method": method,
+        "rawCandidateCount": len(candidates),
+        "acceptedCandidateCount": len(selected),
+        "candidateDiagnostics": diagnostics,
     }
     return masks, debug
 

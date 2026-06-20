@@ -5,8 +5,9 @@ import { normalizeVisionResult, type VisionResult } from "../mask-utils";
 export type VisionInput = {
   image: Blob;
   filename?: string;
-  mode?: "auto" | "classical" | "fastsam" | "mobilesam";
+  mode?: "auto" | "classical" | "click" | "blank-wall";
   clickPoints?: [number, number][];
+  positivePoints?: [number, number][];
   negativePoints?: [number, number][];
   roomType?: string;
   expectedWallsCount?: number;
@@ -20,7 +21,13 @@ export async function runLocalPythonVision(input: VisionInput): Promise<VisionRe
   const form = new FormData();
   form.set("image", input.image, input.filename || "room.jpg");
   form.set("mode", input.mode || "auto");
-  if (input.clickPoints?.length) form.set("clickPoints", JSON.stringify(input.clickPoints));
+  const positivePoints = input.positivePoints || input.clickPoints;
+  if (positivePoints?.length) {
+    form.set(
+      "positivePoints",
+      JSON.stringify(positivePoints.map(([x, y]) => ({ x, y }))),
+    );
+  }
   if (input.negativePoints?.length) form.set("negativePoints", JSON.stringify(input.negativePoints));
   if (input.roomType) form.set("roomType", input.roomType);
   if (input.expectedWallsCount) form.set("expectedWallsCount", String(input.expectedWallsCount));

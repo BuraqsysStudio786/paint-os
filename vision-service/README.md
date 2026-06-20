@@ -89,6 +89,9 @@ Accepts the same fields as `/segment-walls` and returns its normal JSON plus:
 
 - `floorY`
 - `floorDetected`
+- `rawCandidateCount`
+- `acceptedCandidateCount`
+- `candidateDiagnostics` with quality metrics and rejection reasons
 - `debugImageBase64`
 - `debugImageDataUrl`
 

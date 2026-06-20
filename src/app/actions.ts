@@ -10,6 +10,7 @@ import { asBool, asList, asNumber, hexToRgb, parseJsonList, slugify } from "@/li
 import { detectWallMaskWithReplicate } from "@/lib/ai/segmentation";
 import { runPaintWizard, wizardTypes } from "@/lib/ai/wizard-engine";
 import { createVisualizerProject, visualizerProjectSchema } from "@/lib/visualizer-project";
+import { normalizeMaskDocument, serializeMaskDocument } from "@/lib/visualizer/mask-document";
 
 const loginSchema=z.object({email:z.string().email(),password:z.string().min(8)});
 export async function loginAction(_:unknown,formData:FormData){
@@ -122,7 +123,7 @@ export async function deleteRoomAction(formData:FormData){await requireAdmin();c
 
 export async function upsertVisualizerSpaceAction(formData:FormData){
   await requireAdmin();const clientId=String(formData.get("clientId"));const id=String(formData.get("id")||"");const name=String(formData.get("name"));
-  const maskRaw=String(formData.get("maskJson")||"{}");let maskJson:object={};try{maskJson=JSON.parse(maskRaw)}catch{maskJson={imageWidth:1600,imageHeight:1000,masks:[]}}
+  const maskRaw=String(formData.get("maskJson")||"{}");let maskJson:object;try{maskJson=serializeMaskDocument(normalizeMaskDocument(JSON.parse(maskRaw),{gallery:true}))}catch{maskJson=serializeMaskDocument(normalizeMaskDocument({imageWidth:1600,imageHeight:1000,layers:[],status:"draft"},{gallery:true}))}
   const data={clientId,name,slug:slugify(String(formData.get("slug")||name)),roomType:String(formData.get("roomType")||""),space:String(formData.get("space")||""),imageUrl:String(formData.get("imageUrl")||""),thumbnailUrl:String(formData.get("thumbnailUrl")||formData.get("imageUrl")||""),maskJson,defaultShadeId:String(formData.get("defaultShadeId")||"")||null,isFeatured:asBool(formData.get("isFeatured")),isActive:asBool(formData.get("isActive"))};
   if(id)await db.visualizerSpace.update({where:{id,clientId},data});else await db.visualizerSpace.create({data});revalidatePath(clientPath(clientId,"visualizer-spaces"));redirect(clientPath(clientId,"visualizer-spaces"));
 }

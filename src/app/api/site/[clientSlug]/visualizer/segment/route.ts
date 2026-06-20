@@ -9,8 +9,12 @@ const schema = z.object({
   imageUrl: z.string().min(20).max(15_000_000),
   width: z.number().positive().max(10000).optional(),
   height: z.number().positive().max(10000).optional(),
-  mode: z.enum(["auto", "classical", "fastsam", "mobilesam"]).optional(),
+  mode: z.enum(["auto", "classical", "click", "blank-wall"]).optional(),
   clickPoints: z.array(z.tuple([z.number(), z.number()])).optional(),
+  positivePoints: z.array(z.union([
+    z.tuple([z.number(), z.number()]),
+    z.object({ x: z.number(), y: z.number() }),
+  ])).optional(),
   negativePoints: z.array(z.tuple([z.number(), z.number()])).optional(),
   roomType: z.string().max(100).optional(),
   expectedWallsCount: z.number().int().min(1).max(4).optional(),
@@ -38,6 +42,26 @@ export async function POST(request: Request, context: RouteContext<"/api/site/[c
       mode: schema.shape.mode.safeParse(form.get("mode")).data,
       roomType: String(form.get("roomType") || "") || undefined,
       expectedWallsCount: Number(form.get("expectedWallsCount")) || undefined,
+      positivePoints: (() => {
+        const raw = String(
+          form.get("positivePoints") || form.get("clickPoints") || "",
+        );
+        if (!raw) return undefined;
+        try {
+          return schema.shape.positivePoints.parse(JSON.parse(raw));
+        } catch {
+          return undefined;
+        }
+      })(),
+      negativePoints: (() => {
+        const raw = String(form.get("negativePoints") || "");
+        if (!raw) return undefined;
+        try {
+          return schema.shape.negativePoints.parse(JSON.parse(raw));
+        } catch {
+          return undefined;
+        }
+      })(),
     };
   } else {
     const parsed = schema.safeParse(await request.json().catch(() => null));
@@ -51,6 +75,11 @@ export async function POST(request: Request, context: RouteContext<"/api/site/[c
   }
 
   try {
+    const positivePoints = data.positivePoints?.map((point) => (
+      Array.isArray(point)
+        ? point
+        : [point.x, point.y] as [number, number]
+    ));
     const result = await segmentWalls({
       image,
       imageUrl: data.imageUrl.startsWith("http") ? data.imageUrl : undefined,
@@ -58,7 +87,8 @@ export async function POST(request: Request, context: RouteContext<"/api/site/[c
       width: data.width,
       height: data.height,
       mode: data.mode,
-      clickPoints: data.clickPoints,
+      clickPoints: positivePoints || data.clickPoints,
+      positivePoints,
       negativePoints: data.negativePoints,
       roomType: data.roomType,
       expectedWallsCount: data.expectedWallsCount,
@@ -67,7 +97,13 @@ export async function POST(request: Request, context: RouteContext<"/api/site/[c
       data: {
         clientId: client.id,
         type: "wall_segmentation",
-        inputJson: { width: data.width, height: data.height, requestedProvider: process.env.VISION_PROVIDER || "auto" },
+        inputJson: {
+          width: data.width,
+          height: data.height,
+          mode: data.mode,
+          positivePoints,
+          requestedProvider: process.env.VISION_PROVIDER || "auto",
+        },
         outputJson: result,
       },
     });

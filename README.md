@@ -282,16 +282,15 @@ The public visualizer is at `/site/[clientSlug]/visualizer`.
 
 It supports:
 
-- Database gallery spaces from `VisualizerSpace`
-- Multiple saved wall masks per space
+- Approved, admin-curated gallery layers from `VisualizerSpace.maskJson`
+- Multiple independent wall, ceiling, trim, or custom layers
 - Uploaded JPG/PNG room photos
-- Manual polygon wall selection
-- Active wall selection
-- Independent shade, finish, opacity, contrast, and brightness state per wall
-- Finish controls: matt, silk, gloss
-- Lighting controls: daylight, warm light, cool light
-- Intensity control
-- Before/after hold
+- Recommended click-assisted wall selection
+- Auto candidates, rectangle masks, and manual corner polygons
+- Draggable points, point insertion/removal, layer locking, visibility, and deletion
+- Independent shade, finish, blend mode, opacity, contrast, and brightness per layer
+- Shadow-preserving matt, silk, gloss, and texture rendering
+- Before/after, mask visibility, zoom, fit, download, save, and WhatsApp quote
 - Save project to `VisualizerProject`
 - Local Python/OpenCV wall proposals with an `AISession` audit record
 - Optional Replicate or Hugging Face provider fallback
@@ -301,21 +300,34 @@ Mask JSON supports:
 
 ```json
 {
+  "version": 2,
+  "status": "approved",
   "imageWidth": 1600,
   "imageHeight": 1000,
-  "masks": [
+  "layers": [
     {
       "id": "wall-1",
-      "name": "Main wall",
+      "name": "Main Wall",
+      "type": "wall",
+      "source": "gallery-admin",
       "points": [[100,100],[900,120],[880,700],[120,680]],
-      "shadeId": "database-shade-id",
-      "shadeHex": "#F4E8D2",
-      "finish": "matt",
-      "opacity": 0.55,
-      "contrast": 100,
-      "brightness": 100,
-      "blendMode": "multiply",
-      "source": "manual"
+      "originalImageWidth": 1600,
+      "originalImageHeight": 1000,
+      "needsReview": false,
+      "locked": true,
+      "visible": true,
+      "paint": {
+        "shadeId": "database-shade-id",
+        "shadeCode": "A-101",
+        "shadeName": "Warm Linen",
+        "shadeHex": "#F4E8D2",
+        "finish": "matt",
+        "opacity": 0.55,
+        "contrast": 100,
+        "brightness": 100,
+        "blendMode": "multiply",
+        "preserveShadows": true
+      }
     }
   ]
 }
@@ -328,9 +340,10 @@ Gallery rooms use accurate, admin-curated polygon masks stored in
 
 Uploaded rooms use:
 
-1. The local Python service.
-2. Replicate or Hugging Face only when configured and selected.
-3. Manual polygon selection, which is always available.
+1. Click-assisted local Python proposals (recommended).
+2. Auto candidates when useful.
+3. Rectangle and manual corner tools, which are always available.
+4. Draggable-point refinement before colour selection.
 
 No paid SAM 2 API is required. Automatic wall detection is AI-assisted and
 must be reviewed; users can move points, add/delete masks, and draw multiple
@@ -350,9 +363,9 @@ The Aurora seed includes eight fixed-aspect 1600×1000 visualizer templates with
 
 Run `npm run db:seed` after pulling seed changes.
 
-In development, **Mask debug** shows the local service URL, health response,
-last segmentation payload, mask count, image/canvas dimensions, and coordinate
-scale. The panel is unavailable in production.
+In development, the debug drawer shows the last segmentation payload,
+selected layer/source, mask points, image/canvas dimensions, contain offsets,
+coordinate scales, and render timing. The panel is unavailable in production.
 
 ## AI Wizards
 
