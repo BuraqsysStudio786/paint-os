@@ -14,6 +14,7 @@ from .masks import (
     mask_area_ratio,
     mask_iou,
     polygon_mask,
+    regularize_wall_polygon,
     scale_points,
 )
 
@@ -563,6 +564,8 @@ def _candidate_to_output(
     scale: float,
     original_width: int,
     original_height: int,
+    context: dict[str, Any],
+    click_point: list[float] | None = None,
 ) -> dict[str, Any] | None:
     contours, _ = cv2.findContours(
         candidate["mask"],
@@ -572,12 +575,79 @@ def _candidate_to_output(
     if not contours:
         return None
     contour = max(contours, key=cv2.contourArea)
-    points = contour_to_polygon(
+    raw_points = contour_to_polygon(
         contour,
         candidate["mask"].shape[1],
         candidate["mask"].shape[0],
     )
+    mask_pixels = candidate["mask"] > 0
+    floor_y = int(context["floorY"])
+    profile_height = max(1, min(floor_y, candidate["mask"].shape[0]))
+    row_left: list[float] = []
+    row_right: list[float] = []
+    top_left: list[float] = []
+    top_right: list[float] = []
+    bottom_left: list[float] = []
+    bottom_right: list[float] = []
+    for y in range(profile_height):
+        columns = np.flatnonzero(mask_pixels[y])
+        if columns.size == 0:
+            continue
+        left = float(columns[0])
+        right = float(columns[-1])
+        row_left.append(left)
+        row_right.append(right)
+        if y <= profile_height * 0.28:
+            top_left.append(left)
+            top_right.append(right)
+        if y >= profile_height * 0.72:
+            bottom_left.append(left)
+            bottom_right.append(right)
+    column_coverage = (
+        mask_pixels[:profile_height].mean(axis=0).astype(np.float32)
+        if profile_height > 0
+        else np.zeros(candidate["mask"].shape[1], dtype=np.float32)
+    )
+    regularization = {
+        "source": candidate["source"],
+        "texture": (
+            float(context["texture"][mask_pixels].mean())
+            if np.any(mask_pixels)
+            else 255.0
+        ),
+        "edgeDensity": (
+            float(context["edgeDensity"][mask_pixels].mean())
+            if np.any(mask_pixels)
+            else 1.0
+        ),
+        "rowLeft": row_left,
+        "rowRight": row_right,
+        "topLeft": top_left,
+        "topRight": top_right,
+        "bottomLeft": bottom_left,
+        "bottomRight": bottom_right,
+        "columnCoverage": column_coverage.tolist(),
+    }
+    points = regularize_wall_polygon(
+        raw_points,
+        candidate["mask"].shape[1],
+        candidate["mask"].shape[0],
+        floor_y,
+        click_point=click_point,
+        diagnostics=regularization,
+    )
+    if len(points) < 3:
+        return None
+    regularized_mask = polygon_mask(
+        candidate["mask"].shape[1],
+        candidate["mask"].shape[0],
+        points,
+    )
+    if not is_safe_wall_mask(regularized_mask, floor_y):
+        return None
+
     points = scale_points(points, 1.0 / scale, 1.0 / scale)
+    raw_points = scale_points(raw_points, 1.0 / scale, 1.0 / scale)
     points = [
         [
             int(np.clip(x, 0, original_width - 1)),
@@ -585,15 +655,29 @@ def _candidate_to_output(
         ]
         for x, y in points
     ]
+    raw_points = [
+        [
+            int(np.clip(x, 0, original_width - 1)),
+            int(np.clip(y, 0, original_height - 1)),
+        ]
+        for x, y in raw_points
+    ]
     names = ["Main Wall", "Side Wall", "Accent Wall", "Detected Wall 4"]
     confidence = round(min(float(candidate["confidence"]), 0.84), 2)
     return {
         "id": "main-wall" if index == 0 else f"detected-wall-{index + 1}",
         "name": names[index] if index < len(names) else f"Detected Wall {index + 1}",
         "points": points,
+        "rawPoints": raw_points,
         "confidence": confidence,
         "source": candidate["source"],
         "needsReview": confidence < 0.85,
+        "rawPointsCount": int(regularization.get("rawPointsCount", len(raw_points))),
+        "cleanedPointsCount": int(regularization.get("cleanedPointsCount", len(points))),
+        "regularized": bool(regularization.get("regularized", False)),
+        "regularizationReason": str(
+            regularization.get("regularizationReason", "no regularization applied")
+        ),
     }
 
 
@@ -698,12 +782,15 @@ def classical_wall_proposals(
 
     masks: list[dict[str, Any]] = []
     for index, candidate in enumerate(selected):
+        click_point = scaled_positive[0] if mode == "click" and scaled_positive else None
         output = _candidate_to_output(
             candidate,
             index,
             scale,
             original_width,
             original_height,
+            context,
+            click_point,
         )
         if output is not None:
             masks.append(output)
@@ -720,8 +807,18 @@ def classical_wall_proposals(
         "floorDetected": bool(context["floorDetected"]),
         "method": method,
         "rawCandidateCount": len(candidates),
-        "acceptedCandidateCount": len(selected),
+        "acceptedCandidateCount": len(masks),
         "candidateDiagnostics": diagnostics,
+        "regularizationDiagnostics": [
+            {
+                "id": mask["id"],
+                "rawPointsCount": mask["rawPointsCount"],
+                "cleanedPointsCount": mask["cleanedPointsCount"],
+                "regularized": mask["regularized"],
+                "regularizationReason": mask["regularizationReason"],
+            }
+            for mask in masks
+        ],
     }
     return masks, debug
 
@@ -758,16 +855,37 @@ def fastsam_wall_proposals(
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if not contours:
             continue
-        points = contour_to_polygon(max(contours, key=cv2.contourArea), width, height)
+        raw_points = contour_to_polygon(max(contours, key=cv2.contourArea), width, height)
+        regularization = {
+            "source": "fastsam",
+            "texture": 0.0,
+            "edgeDensity": 0.0,
+        }
+        points = regularize_wall_polygon(
+            raw_points,
+            width,
+            height,
+            floor_y,
+            diagnostics=regularization,
+        )
+        if len(points) < 3:
+            continue
         index = len(output)
         output.append(
             {
                 "id": "main-wall" if index == 0 else f"detected-wall-{index + 1}",
                 "name": ["Main Wall", "Side Wall", "Accent Wall", "Detected Wall 4"][index],
                 "points": points,
+                "rawPoints": raw_points,
                 "confidence": 0.82,
                 "source": "fastsam",
                 "needsReview": True,
+                "rawPointsCount": int(regularization.get("rawPointsCount", len(raw_points))),
+                "cleanedPointsCount": int(regularization.get("cleanedPointsCount", len(points))),
+                "regularized": bool(regularization.get("regularized", False)),
+                "regularizationReason": str(
+                    regularization.get("regularizationReason", "no regularization applied")
+                ),
             }
         )
         if len(output) >= max(1, min(expected_walls or 4, 4)):
@@ -793,7 +911,23 @@ def detect_walls(
                     "fastsam",
                     masks,
                     ["AI-assisted mask generated. Please review wall edges."],
-                    {"floorY": int(image.shape[0] * 0.78), "floorDetected": False},
+                    {
+                        "floorY": int(image.shape[0] * 0.78),
+                        "floorDetected": False,
+                        "rawCandidateCount": len(masks),
+                        "acceptedCandidateCount": len(masks),
+                        "candidateDiagnostics": [],
+                        "regularizationDiagnostics": [
+                            {
+                                "id": mask["id"],
+                                "rawPointsCount": mask["rawPointsCount"],
+                                "cleanedPointsCount": mask["cleanedPointsCount"],
+                                "regularized": mask["regularized"],
+                                "regularizationReason": mask["regularizationReason"],
+                            }
+                            for mask in masks
+                        ],
+                    },
                 )
             warnings.append("FastSAM returned no suitable wall planes; classical detection was used.")
         except Exception as error:

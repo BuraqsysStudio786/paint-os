@@ -169,6 +169,7 @@ async def segment_walls_debug(
         "rawCandidateCount": debug.get("rawCandidateCount", 0),
         "acceptedCandidateCount": debug.get("acceptedCandidateCount", len(payload["masks"])),
         "candidateDiagnostics": debug.get("candidateDiagnostics", []),
+        "regularizationDiagnostics": debug.get("regularizationDiagnostics", []),
         "debugImageBase64": debug_image,
         "debugImageDataUrl": f"data:image/png;base64,{debug_image}",
     }

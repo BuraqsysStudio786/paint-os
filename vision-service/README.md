@@ -12,6 +12,8 @@ The classical detector combines:
 - scored blank-wall fallback regions
 - click-assisted color region growing
 - object, plant, window-edge, and floor suppression
+- wall-plane polygon regularization that removes object-following dents,
+  snaps room boundaries, and fits click masks to clean 4-6 point planes
 
 Automatic masks are proposals. Masks below 0.85 confidence are marked
 `needsReview: true`, and the visualizer's manual polygon editor remains the
@@ -76,7 +78,11 @@ Successful masks use original-image coordinates and contain:
   "points": [[0, 0], [420, 0], [420, 312], [0, 312]],
   "confidence": 0.68,
   "source": "blank-wall-fallback",
-  "needsReview": true
+  "needsReview": true,
+  "rawPointsCount": 8,
+  "cleanedPointsCount": 4,
+  "regularized": true,
+  "regularizationReason": "contour simplified, dents removed, and room boundaries snapped"
 }
 ```
 
