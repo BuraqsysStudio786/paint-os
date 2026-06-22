@@ -579,10 +579,6 @@ export type BlogPostUncheckedUpdateManyWithoutClientNestedInput = {
   deleteMany?: Prisma.BlogPostScalarWhereInput | Prisma.BlogPostScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type BlogPostCreateWithoutClientInput = {
   id?: string
   title: string

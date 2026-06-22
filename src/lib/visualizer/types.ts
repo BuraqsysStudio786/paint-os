@@ -1,11 +1,10 @@
 export type VisualizerLayerType = "wall" | "ceiling" | "trim" | "custom";
 export type VisualizerLayerSource =
-  | "gallery-admin"
-  | "auto-detect"
-  | "click-detect"
+  | "gallery-approved"
+  | "four-point"
   | "rectangle"
-  | "manual-polygon"
-  | "brush-refined";
+  | "polygon"
+  | "ai-suggested";
 export type VisualizerFinish = "matt" | "silk" | "gloss" | "texture";
 export type VisualizerBlendMode = "multiply" | "overlay" | "color" | "soft-light";
 export type MaskStatus = "draft" | "needs_review" | "approved";
@@ -48,6 +47,7 @@ export type VisualizerMaskDocument = {
   layers: VisualizerMaskLayer[];
   masks: VisualizerMaskLayer[];
   updatedAt?: string;
+  updatedBy?: string;
 };
 
 export type CanvasViewport = {

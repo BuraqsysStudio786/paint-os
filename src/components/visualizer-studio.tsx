@@ -41,8 +41,11 @@ import { saveVisualizerProject } from "@/app/actions";
 import {
   canvasToOriginalPoint,
   createContainViewport,
+  insertPointOnEdge,
+  movePoint,
   nearestPointIndex,
   pointInPolygon,
+  removePoint,
   scalePolygonToCanvas,
   validateMaskLayer,
 } from "@/lib/visualizer/geometry";
@@ -71,7 +74,7 @@ type Space = {
   defaultShadeId?: string | null;
 };
 
-type Tool = "select" | "click" | "rectangle" | "polygon" | "refine";
+type Tool = "select" | "four-point" | "rectangle" | "polygon" | "ai" | "refine";
 
 type SegmentationResponse = {
   ok?: boolean;
@@ -110,7 +113,7 @@ function newLayer(
     points,
     originalImageWidth: width,
     originalImageHeight: height,
-    needsReview: source !== "gallery-admin",
+    needsReview: source !== "gallery-approved",
     locked: false,
     visible: true,
   };
@@ -176,13 +179,12 @@ async function uploadVisualizerImage(file: File) {
 function layerFromDetection(
   mask: SegmentationResponse["masks"][number],
   response: SegmentationResponse,
-  source: "auto-detect" | "click-detect",
 ): VisualizerMaskLayer {
   return {
     id: crypto.randomUUID(),
     name: mask.name || "Detected Wall",
     type: "wall",
-    source,
+    source: "ai-suggested",
     points: mask.points,
     originalImageWidth: response.imageWidth,
     originalImageHeight: response.imageHeight,
@@ -199,6 +201,7 @@ function ToolButton({
   icon,
   label,
   recommended,
+  description,
   onClick,
 }: {
   active?: boolean;
@@ -206,6 +209,7 @@ function ToolButton({
   icon: React.ReactNode;
   label: string;
   recommended?: boolean;
+  description?: string;
   onClick: () => void;
 }) {
   return (
@@ -220,7 +224,14 @@ function ToolButton({
       }`}
     >
       {icon}
-      <span>{label}</span>
+      <span>
+        <strong className="block">{label}</strong>
+        {description && (
+          <small className="mt-1 block text-[9px] font-medium leading-4 opacity-65">
+            {description}
+          </small>
+        )}
+      </span>
       {recommended && (
         <span className="absolute right-2 top-2 rounded-full bg-[var(--secondary)] px-2 py-1 text-[8px] uppercase text-[var(--primary)]">
           Recommended
@@ -277,7 +288,7 @@ export function VisualizerStudio({
     firstGalleryDocument.layers[0]?.id || "",
   );
   const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
-  const [tool, setTool] = useState<Tool>("select");
+  const [tool, setTool] = useState<Tool>(firstSpace ? "select" : "four-point");
   const [rectanglePreview, setRectanglePreview] = useState<VisualizerPoint[]>(
     [],
   );
@@ -356,6 +367,10 @@ export function VisualizerStudio({
   const selectShade = useCallback((shade: PublicShade) => {
     if (!selectedLayer) {
       setStatus("Create or select a wall layer before choosing a shade.");
+      return;
+    }
+    if (selectedLayer.needsReview) {
+      setStatus("Review the mask points and choose “Use this wall” before applying colour.");
       return;
     }
     updateSelectedLayer({
@@ -516,7 +531,7 @@ export function VisualizerStudio({
     if (
       selectedLayer
       && selectedLayer.visible
-      && tool !== "click"
+      && tool !== "ai"
       && showMasks
     ) {
       selectedCanvasPoints.forEach(([x, y], index) => {
@@ -572,7 +587,7 @@ export function VisualizerStudio({
   const switchMode = (nextMode: "gallery" | "upload") => {
     setMode(nextMode);
     setBefore(false);
-    setTool(nextMode === "upload" ? "click" : "select");
+    setTool(nextMode === "upload" ? "four-point" : "select");
     setZoom(1);
     setSelectedPoint(null);
     if (nextMode === "gallery") {
@@ -583,7 +598,7 @@ export function VisualizerStudio({
       setImageUrl(objectUrlRef.current || "");
       setDocument(createEmptyMaskDocument());
       setSelectedLayerId("");
-      setStatus("Upload a photo, then click the wall for the best starting point.");
+      setStatus("Upload a photo, then click the four wall corners for best accuracy.");
     }
   };
 
@@ -621,8 +636,8 @@ export function VisualizerStudio({
     setUploadedUrl("");
     setDocument(createEmptyMaskDocument());
     setSelectedLayerId("");
-    setTool("click");
-    setStatus("Photo ready. Recommended: choose Click Wall, then click inside the wall.");
+    setTool("four-point");
+    setStatus("Best accuracy: click the four corners of the wall.");
   };
 
   const runDetection = useCallback((
@@ -663,11 +678,7 @@ export function VisualizerStudio({
             || "No useful wall candidate was found.",
           );
         }
-        const layers = result.masks.map((mask) => layerFromDetection(
-          mask,
-          result,
-          modeName === "click" ? "click-detect" : "auto-detect",
-        ));
+        const layers = result.masks.map((mask) => layerFromDetection(mask, result));
         setDocument((current) => {
           const existing = current.layers;
           const merged = modeName === "click"
@@ -703,8 +714,19 @@ export function VisualizerStudio({
       || canvasPoint[1] > viewport.offsetY + viewport.renderedHeight
     ) return;
 
-    if (tool === "click") {
-      runDetection("click", originalPoint);
+    if (tool === "four-point") {
+      if (!selectedLayer || selectedLayer.source !== "four-point" || (selectedLayer.points?.length || 0) >= 4) {
+        addLayer("four-point", [originalPoint], "Quick Wall");
+        setStatus("Corner 1 of 4 selected.");
+      } else {
+        const points = [...(selectedLayer.points || []), originalPoint].slice(0, 4);
+        updateSelectedLayer({ points, needsReview: true });
+        if (points.length === 4) {
+          setStatus("Four corners selected. Choose “Finish Wall”, then refine if needed.");
+        } else {
+          setStatus(`Corner ${points.length} of 4 selected.`);
+        }
+      }
       return;
     }
     if (tool === "rectangle") {
@@ -714,8 +736,8 @@ export function VisualizerStudio({
       return;
     }
     if (tool === "polygon") {
-      if (!selectedLayer || selectedLayer.source !== "manual-polygon") {
-        addLayer("manual-polygon", [originalPoint], "Custom Wall");
+      if (!selectedLayer || selectedLayer.source !== "polygon") {
+        addLayer("polygon", [originalPoint], "Custom Wall");
       } else {
         updateSelectedLayer({
           points: [...(selectedLayer.points || []), originalPoint],
@@ -766,11 +788,14 @@ export function VisualizerStudio({
       || selectedLayer.locked
     ) return;
     dragMovedRef.current = true;
-    const points = [...(selectedLayer.points || [])];
-    points[dragPointRef.current] = originalPoint;
+    const points = movePoint(
+      selectedLayer.points || [],
+      dragPointRef.current,
+      originalPoint,
+    );
     updateSelectedLayer({
       points,
-      needsReview: selectedLayer.source !== "gallery-admin",
+      needsReview: selectedLayer.source !== "gallery-approved",
     });
   };
 
@@ -804,7 +829,7 @@ export function VisualizerStudio({
       if ((selectedLayer.points?.length || 0) <= 3) return;
       event.preventDefault();
       updateSelectedLayer({
-        points: selectedLayer.points?.filter((_, index) => index !== selectedPoint),
+        points: removePoint(selectedLayer.points || [], selectedPoint),
       });
       setSelectedPoint(null);
     };
@@ -832,7 +857,7 @@ export function VisualizerStudio({
       || selectedLayer.locked
     ) return;
     updateSelectedLayer({
-      points: selectedLayer.points.filter((_, index) => index !== selectedPoint),
+      points: removePoint(selectedLayer.points, selectedPoint),
     });
     setSelectedPoint(null);
   };
@@ -855,14 +880,12 @@ export function VisualizerStudio({
     }
     const previous = points[(insertAt - 1 + points.length) % points.length];
     const next = points[insertAt % points.length];
-    const updated = [...points];
-    updated.splice(insertAt, 0, [
+    const updated = insertPointOnEdge(points, (insertAt - 1 + points.length) % points.length, [
       (previous[0] + next[0]) / 2,
       (previous[1] + next[1]) / 2,
     ]);
     updateSelectedLayer({
       points: updated,
-      source: "brush-refined",
       needsReview: true,
     });
     setSelectedPoint(insertAt);
@@ -885,6 +908,18 @@ export function VisualizerStudio({
       setSelectedLayerId(remaining[0]?.id || "");
       setSelectedPoint(null);
     }
+  };
+
+  const resetSelectedLayerPaint = () => {
+    if (!selectedLayer) return;
+    updateSelectedLayer({ paint: undefined });
+    setStatus(`${selectedLayer.name} paint reset.`);
+  };
+
+  const resetAllPaint = () => {
+    setLayers((layers) => layers.map((layer) => ({ ...layer, paint: undefined })));
+    setBefore(false);
+    setStatus("All layer colours reset.");
   };
 
   const save = () => {
@@ -947,6 +982,17 @@ export function VisualizerStudio({
   const selectedShade = shades.find(
     (item) => item.id === selectedLayer?.paint?.shadeId,
   ) || initialShade;
+  const workflowStep = mode === "gallery"
+    ? 4
+    : !imageUrl
+      ? 1
+      : !selectedLayer
+        ? 2
+        : selectedLayer.needsReview
+          ? 3
+          : selectedLayer.paint
+            ? 5
+            : 4;
   const quoteText = encodeURIComponent(
     `I created a paint visualizer project${savedId ? ` (${savedId})` : ""}. `
     + document.layers.map((layer) => (
@@ -954,7 +1000,7 @@ export function VisualizerStudio({
     )).join("; ")
     + ". Please send a quote.",
   );
-  const cursor = tool === "click" || tool === "polygon" || tool === "rectangle"
+  const cursor = tool === "four-point" || tool === "polygon" || tool === "rectangle"
     ? "cursor-crosshair"
     : tool === "refine"
       ? "cursor-move"
@@ -1087,9 +1133,10 @@ export function VisualizerStudio({
 
             {tool !== "select" && mode === "upload" && (
               <span className="absolute bottom-3 left-3 bg-black/70 px-3 py-2 text-xs font-bold text-white backdrop-blur">
-                {tool === "click" && "Click inside the wall"}
+                {tool === "four-point" && `Click the four wall corners · ${selectedLayer?.source === "four-point" ? selectedLayer.points?.length || 0 : 0}/4`}
                 {tool === "rectangle" && "Drag over the wall"}
-                {tool === "polygon" && "Click each wall corner"}
+                {tool === "polygon" && "Click around the wall boundary"}
+                {tool === "ai" && "AI suggestion is optional and must be reviewed"}
                 {tool === "refine" && "Drag points to refine"}
               </span>
             )}
@@ -1101,7 +1148,7 @@ export function VisualizerStudio({
               {status}
             </span>
             {mode === "upload" && (
-              <span>For best accuracy, click the wall or define corners manually.</span>
+              <span>Best accuracy: select wall corners manually.</span>
             )}
           </div>
 
@@ -1244,6 +1291,26 @@ export function VisualizerStudio({
             <Layers3 size={25} strokeWidth={1.4} />
           </div>
 
+          {mode === "upload" && (
+            <div className="mt-5">
+              <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">
+                <span>Upload</span>
+                <span>Select</span>
+                <span>Review</span>
+                <span>Colour</span>
+                <span>Save</span>
+              </div>
+              <div className="mt-2 grid grid-cols-5 gap-1">
+                {[1, 2, 3, 4, 5].map((step) => (
+                  <span
+                    key={step}
+                    className={`h-1 ${step <= workflowStep ? "bg-[var(--accent)]" : "bg-black/10"}`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-7">
             <div className="flex items-center justify-between">
               <p className="tool-label">Layers</p>
@@ -1251,12 +1318,12 @@ export function VisualizerStudio({
                 <button
                   type="button"
                   onClick={() => {
-                    addLayer("manual-polygon", [], `Wall ${document.layers.length + 1}`);
-                    setTool("polygon");
+                    addLayer("four-point", [], `Wall ${document.layers.length + 1}`);
+                    setTool("four-point");
                   }}
                   className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]"
                 >
-                  <Plus size={13} /> Add Layer
+                  <Plus size={13} /> Add Another Wall
                 </button>
               )}
             </div>
@@ -1321,7 +1388,7 @@ export function VisualizerStudio({
                 <div className="border border-dashed border-black/20 p-4 text-xs text-[var(--muted)]">
                   {mode === "gallery"
                     ? "This gallery room needs mask setup in admin."
-                    : "No wall layers yet. Click the wall, draw a rectangle, or select corners."}
+                    : "No wall layers yet. Select four corners, draw a rectangle, or create a polygon."}
                 </div>
               )}
             </div>
@@ -1332,24 +1399,34 @@ export function VisualizerStudio({
               <p className="tool-label">Create Mask</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <ToolButton
-                  active={tool === "click"}
-                  disabled={!imageUrl || !visionEnabled || detecting}
+                  active={tool === "four-point"}
+                  disabled={!imageUrl}
                   icon={<MousePointer2 size={18} />}
-                  label={detecting ? "Detecting…" : "Click Wall"}
+                  label="Quick Wall Select"
+                  description="Click the four wall corners. Best accuracy."
                   recommended
-                  onClick={() => setTool("click")}
+                  onClick={() => {
+                    addLayer("four-point", [], "Quick Wall");
+                    setTool("four-point");
+                    setStatus("Click the four corners of the wall area.");
+                  }}
                 />
                 <ToolButton
                   disabled={!imageUrl || !visionEnabled || detecting}
                   icon={<WandSparkles size={18} />}
-                  label="Auto Detect"
-                  onClick={() => runDetection("auto")}
+                  label={detecting ? "Suggesting…" : "AI Suggest Mask"}
+                  description="Optional starting mask. Review before colour."
+                  onClick={() => {
+                    setTool("ai");
+                    runDetection("auto");
+                  }}
                 />
                 <ToolButton
                   active={tool === "rectangle"}
                   disabled={!imageUrl}
                   icon={<RectangleHorizontal size={18} />}
-                  label="Rectangle"
+                  label="Rectangle Mask"
+                  description="Drag over a simple straight wall."
                   onClick={() => setTool("rectangle")}
                 />
                 <ToolButton
@@ -1357,9 +1434,10 @@ export function VisualizerStudio({
                   disabled={!imageUrl}
                   icon={<Pencil size={18} />}
                   label="Custom Polygon"
+                  description="Click around irregular wall edges."
                   onClick={() => {
-                    if (!selectedLayer || selectedLayer.source !== "manual-polygon") {
-                      addLayer("manual-polygon", [], "Custom Wall");
+                    if (!selectedLayer || selectedLayer.source !== "polygon") {
+                      addLayer("polygon", [], "Custom Wall");
                     }
                     setTool("polygon");
                   }}
@@ -1378,14 +1456,18 @@ export function VisualizerStudio({
                   onClick={addRefinePoint}
                 />
               </div>
-              {tool === "polygon" && (
+              {(tool === "polygon" || tool === "four-point") && (
                 <button
                   type="button"
                   onClick={finishPolygon}
-                  disabled={(selectedLayer?.points?.length || 0) < 3}
+                  disabled={
+                    tool === "four-point"
+                      ? (selectedLayer?.points?.length || 0) !== 4
+                      : (selectedLayer?.points?.length || 0) < 3
+                  }
                   className="admin-btn mt-3 w-full disabled:opacity-40"
                 >
-                  <Check size={15} /> Finish Selection
+                  <Check size={15} /> Finish Wall
                 </button>
               )}
               {selectedLayer && (
@@ -1408,14 +1490,38 @@ export function VisualizerStudio({
                 </div>
               )}
               <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
-                Click detection is recommended. Rectangle and corner tools guarantee
-                a usable result when the room is complex.
+                Manual corner selection is recommended. AI is only a suggestion
+                and never blocks rectangle or polygon tools.
               </p>
             </div>
           )}
 
           {selectedLayer && (
             <div className="mt-6 border-t border-black/10 pt-5">
+              {selectedLayer.needsReview && mode === "upload" && (
+                <div className="mb-5 border-l-2 border-amber-600 bg-amber-50 p-3">
+                  <strong className="block text-xs">Review wall area</strong>
+                  <p className="mt-1 text-[10px] leading-4 text-black/55">
+                    Drag points, add or erase points, then approve this wall before applying colour.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const validation = validateMaskLayer(selectedLayer);
+                      if (!validation.valid) {
+                        setStatus(validation.reason);
+                        return;
+                      }
+                      updateSelectedLayer({ needsReview: false });
+                      setTool("select");
+                      setStatus(`${selectedLayer.name} is ready for colour.`);
+                    }}
+                    className="admin-btn mt-3 w-full"
+                  >
+                    <Check size={15} /> Use This Wall
+                  </button>
+                </div>
+              )}
               <label className="tool-label">
                 Layer name
                 <input
@@ -1524,6 +1630,7 @@ export function VisualizerStudio({
                 <button
                   type="button"
                   onClick={() => selectShade(selectedShade)}
+                  disabled={selectedLayer.needsReview}
                   className="admin-btn mt-4 w-full"
                 >
                   Apply {selectedShade.name}
@@ -1564,6 +1671,24 @@ export function VisualizerStudio({
             >
               <MessageCircle size={16} /> WhatsApp Quote
             </a>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={resetSelectedLayerPaint}
+                disabled={!selectedLayer?.paint}
+                className="admin-btn-light disabled:opacity-35"
+              >
+                <RotateCcw size={14} /> Reset Layer
+              </button>
+              <button
+                type="button"
+                onClick={resetAllPaint}
+                disabled={!document.layers.some((layer) => layer.paint)}
+                className="admin-btn-light disabled:opacity-35"
+              >
+                <Trash2 size={14} /> Reset All
+              </button>
+            </div>
           </div>
 
           <details className="mt-5 border-t border-black/10 pt-4">

@@ -342,6 +342,9 @@ model VisualizerSpace {
   imageUrl String
   thumbnailUrl String
   maskJson Json
+  maskStatus String @default("draft")
+  maskUpdatedAt DateTime?
+  maskUpdatedBy String?
   defaultShadeId String?
   isFeatured Boolean @default(false)
   isActive Boolean @default(true)

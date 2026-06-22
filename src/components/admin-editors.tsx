@@ -147,7 +147,7 @@ export function VisualizerSpaceEditor({clientId,clientSlug,shades,space}:{client
     <TextField name="roomType" label="Room type" defaultValue={space?.roomType}/><SelectField name="space" label="Space" defaultValue={space?.space || space?.roomType}>{spaces.map(s=><option key={s}>{s}</option>)}</SelectField>
     <TextField name="thumbnailUrl" label="Thumbnail URL" defaultValue={space?.thumbnailUrl}/>
     <SelectField name="defaultShadeId" label="Default shade" defaultValue={space?.defaultShadeId}>{<option value="">None</option>}{shades.map(s=><option value={s.id} key={s.id}>{s.name}</option>)}</SelectField>
-    <AdminVisualizerMaskEditor clientSlug={clientSlug} initialImageUrl={String(space?.imageUrl || "")} initialMaskJson={space?.maskJson || {imageWidth:1600,imageHeight:1000,masks:[]}} shades={shades}/>
+    <AdminVisualizerMaskEditor clientSlug={clientSlug} initialImageUrl={String(space?.imageUrl || "")} initialMaskJson={space?.maskJson ? {...space.maskJson as object,status:String(space.maskStatus||"draft"),updatedAt:space.maskUpdatedAt instanceof Date?space.maskUpdatedAt.toISOString():undefined,updatedBy:String(space.maskUpdatedBy||"")} : {imageWidth:1600,imageHeight:1000,layers:[],status:"draft"}} shades={shades}/>
     <div className="md:col-span-2 grid gap-3 md:grid-cols-2"><CheckField name="isFeatured" label="Featured" defaultChecked={space?.isFeatured===true}/><CheckField name="isActive" label="Active" defaultChecked={space?.isActive!==false}/></div>
     <button className="admin-btn md:col-span-2"><Check size={16}/>Save visualizer space</button>
   </form>;

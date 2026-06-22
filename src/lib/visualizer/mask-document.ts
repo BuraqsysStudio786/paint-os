@@ -33,18 +33,18 @@ const rawLayerSchema = z.object({
 });
 
 function source(value: string | undefined, gallery: boolean): VisualizerLayerSource {
-  if (value === "gallery-admin"
-    || value === "auto-detect"
-    || value === "click-detect"
+  if (value === "gallery-approved"
+    || value === "four-point"
     || value === "rectangle"
-    || value === "manual-polygon"
-    || value === "brush-refined") return value;
-  if (gallery) return "gallery-admin";
-  if (value?.includes("click")) return "click-detect";
+    || value === "polygon"
+    || value === "ai-suggested") return value;
+  if (gallery || value?.includes("gallery")) return "gallery-approved";
+  if (value?.includes("four")) return "four-point";
   if (value?.includes("rectangle")) return "rectangle";
-  if (value?.includes("manual")) return "manual-polygon";
-  if (value?.includes("brush")) return "brush-refined";
-  return "auto-detect";
+  if (value?.includes("manual") || value?.includes("polygon") || value?.includes("brush")) {
+    return "polygon";
+  }
+  return "ai-suggested";
 }
 
 export function createEmptyMaskDocument(
@@ -146,6 +146,7 @@ export function normalizeMaskDocument(
     layers,
     masks: layers,
     updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : undefined,
+    updatedBy: typeof record.updatedBy === "string" ? record.updatedBy : undefined,
   };
 }
 

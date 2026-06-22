@@ -33,6 +33,9 @@ export type VisualizerSpaceMinAggregateOutputType = {
   space: string | null
   imageUrl: string | null
   thumbnailUrl: string | null
+  maskStatus: string | null
+  maskUpdatedAt: Date | null
+  maskUpdatedBy: string | null
   defaultShadeId: string | null
   isFeatured: boolean | null
   isActive: boolean | null
@@ -49,6 +52,9 @@ export type VisualizerSpaceMaxAggregateOutputType = {
   space: string | null
   imageUrl: string | null
   thumbnailUrl: string | null
+  maskStatus: string | null
+  maskUpdatedAt: Date | null
+  maskUpdatedBy: string | null
   defaultShadeId: string | null
   isFeatured: boolean | null
   isActive: boolean | null
@@ -66,6 +72,9 @@ export type VisualizerSpaceCountAggregateOutputType = {
   imageUrl: number
   thumbnailUrl: number
   maskJson: number
+  maskStatus: number
+  maskUpdatedAt: number
+  maskUpdatedBy: number
   defaultShadeId: number
   isFeatured: number
   isActive: number
@@ -84,6 +93,9 @@ export type VisualizerSpaceMinAggregateInputType = {
   space?: true
   imageUrl?: true
   thumbnailUrl?: true
+  maskStatus?: true
+  maskUpdatedAt?: true
+  maskUpdatedBy?: true
   defaultShadeId?: true
   isFeatured?: true
   isActive?: true
@@ -100,6 +112,9 @@ export type VisualizerSpaceMaxAggregateInputType = {
   space?: true
   imageUrl?: true
   thumbnailUrl?: true
+  maskStatus?: true
+  maskUpdatedAt?: true
+  maskUpdatedBy?: true
   defaultShadeId?: true
   isFeatured?: true
   isActive?: true
@@ -117,6 +132,9 @@ export type VisualizerSpaceCountAggregateInputType = {
   imageUrl?: true
   thumbnailUrl?: true
   maskJson?: true
+  maskStatus?: true
+  maskUpdatedAt?: true
+  maskUpdatedBy?: true
   defaultShadeId?: true
   isFeatured?: true
   isActive?: true
@@ -207,6 +225,9 @@ export type VisualizerSpaceGroupByOutputType = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: runtime.JsonValue
+  maskStatus: string
+  maskUpdatedAt: Date | null
+  maskUpdatedBy: string | null
   defaultShadeId: string | null
   isFeatured: boolean
   isActive: boolean
@@ -245,6 +266,9 @@ export type VisualizerSpaceWhereInput = {
   imageUrl?: Prisma.StringFilter<"VisualizerSpace"> | string
   thumbnailUrl?: Prisma.StringFilter<"VisualizerSpace"> | string
   maskJson?: Prisma.JsonFilter<"VisualizerSpace">
+  maskStatus?: Prisma.StringFilter<"VisualizerSpace"> | string
+  maskUpdatedAt?: Prisma.DateTimeNullableFilter<"VisualizerSpace"> | Date | string | null
+  maskUpdatedBy?: Prisma.StringNullableFilter<"VisualizerSpace"> | string | null
   defaultShadeId?: Prisma.StringNullableFilter<"VisualizerSpace"> | string | null
   isFeatured?: Prisma.BoolFilter<"VisualizerSpace"> | boolean
   isActive?: Prisma.BoolFilter<"VisualizerSpace"> | boolean
@@ -265,6 +289,9 @@ export type VisualizerSpaceOrderByWithRelationInput = {
   imageUrl?: Prisma.SortOrder
   thumbnailUrl?: Prisma.SortOrder
   maskJson?: Prisma.SortOrder
+  maskStatus?: Prisma.SortOrder
+  maskUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  maskUpdatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   defaultShadeId?: Prisma.SortOrderInput | Prisma.SortOrder
   isFeatured?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
@@ -289,6 +316,9 @@ export type VisualizerSpaceWhereUniqueInput = Prisma.AtLeast<{
   imageUrl?: Prisma.StringFilter<"VisualizerSpace"> | string
   thumbnailUrl?: Prisma.StringFilter<"VisualizerSpace"> | string
   maskJson?: Prisma.JsonFilter<"VisualizerSpace">
+  maskStatus?: Prisma.StringFilter<"VisualizerSpace"> | string
+  maskUpdatedAt?: Prisma.DateTimeNullableFilter<"VisualizerSpace"> | Date | string | null
+  maskUpdatedBy?: Prisma.StringNullableFilter<"VisualizerSpace"> | string | null
   defaultShadeId?: Prisma.StringNullableFilter<"VisualizerSpace"> | string | null
   isFeatured?: Prisma.BoolFilter<"VisualizerSpace"> | boolean
   isActive?: Prisma.BoolFilter<"VisualizerSpace"> | boolean
@@ -309,6 +339,9 @@ export type VisualizerSpaceOrderByWithAggregationInput = {
   imageUrl?: Prisma.SortOrder
   thumbnailUrl?: Prisma.SortOrder
   maskJson?: Prisma.SortOrder
+  maskStatus?: Prisma.SortOrder
+  maskUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  maskUpdatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   defaultShadeId?: Prisma.SortOrderInput | Prisma.SortOrder
   isFeatured?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
@@ -332,6 +365,9 @@ export type VisualizerSpaceScalarWhereWithAggregatesInput = {
   imageUrl?: Prisma.StringWithAggregatesFilter<"VisualizerSpace"> | string
   thumbnailUrl?: Prisma.StringWithAggregatesFilter<"VisualizerSpace"> | string
   maskJson?: Prisma.JsonWithAggregatesFilter<"VisualizerSpace">
+  maskStatus?: Prisma.StringWithAggregatesFilter<"VisualizerSpace"> | string
+  maskUpdatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"VisualizerSpace"> | Date | string | null
+  maskUpdatedBy?: Prisma.StringNullableWithAggregatesFilter<"VisualizerSpace"> | string | null
   defaultShadeId?: Prisma.StringNullableWithAggregatesFilter<"VisualizerSpace"> | string | null
   isFeatured?: Prisma.BoolWithAggregatesFilter<"VisualizerSpace"> | boolean
   isActive?: Prisma.BoolWithAggregatesFilter<"VisualizerSpace"> | boolean
@@ -348,6 +384,9 @@ export type VisualizerSpaceCreateInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   isFeatured?: boolean
   isActive?: boolean
   createdAt?: Date | string
@@ -367,6 +406,9 @@ export type VisualizerSpaceUncheckedCreateInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   defaultShadeId?: string | null
   isFeatured?: boolean
   isActive?: boolean
@@ -384,6 +426,9 @@ export type VisualizerSpaceUpdateInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -403,6 +448,9 @@ export type VisualizerSpaceUncheckedUpdateInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultShadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -421,6 +469,9 @@ export type VisualizerSpaceCreateManyInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   defaultShadeId?: string | null
   isFeatured?: boolean
   isActive?: boolean
@@ -437,6 +488,9 @@ export type VisualizerSpaceUpdateManyMutationInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -453,6 +507,9 @@ export type VisualizerSpaceUncheckedUpdateManyInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultShadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -485,6 +542,9 @@ export type VisualizerSpaceCountOrderByAggregateInput = {
   imageUrl?: Prisma.SortOrder
   thumbnailUrl?: Prisma.SortOrder
   maskJson?: Prisma.SortOrder
+  maskStatus?: Prisma.SortOrder
+  maskUpdatedAt?: Prisma.SortOrder
+  maskUpdatedBy?: Prisma.SortOrder
   defaultShadeId?: Prisma.SortOrder
   isFeatured?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
@@ -501,6 +561,9 @@ export type VisualizerSpaceMaxOrderByAggregateInput = {
   space?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
   thumbnailUrl?: Prisma.SortOrder
+  maskStatus?: Prisma.SortOrder
+  maskUpdatedAt?: Prisma.SortOrder
+  maskUpdatedBy?: Prisma.SortOrder
   defaultShadeId?: Prisma.SortOrder
   isFeatured?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
@@ -517,6 +580,9 @@ export type VisualizerSpaceMinOrderByAggregateInput = {
   space?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
   thumbnailUrl?: Prisma.SortOrder
+  maskStatus?: Prisma.SortOrder
+  maskUpdatedAt?: Prisma.SortOrder
+  maskUpdatedBy?: Prisma.SortOrder
   defaultShadeId?: Prisma.SortOrder
   isFeatured?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
@@ -613,6 +679,10 @@ export type VisualizerSpaceUncheckedUpdateManyWithoutDefaultShadeNestedInput = {
   deleteMany?: Prisma.VisualizerSpaceScalarWhereInput | Prisma.VisualizerSpaceScalarWhereInput[]
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type VisualizerSpaceCreateNestedOneWithoutVisualizerProjectsInput = {
   create?: Prisma.XOR<Prisma.VisualizerSpaceCreateWithoutVisualizerProjectsInput, Prisma.VisualizerSpaceUncheckedCreateWithoutVisualizerProjectsInput>
   connectOrCreate?: Prisma.VisualizerSpaceCreateOrConnectWithoutVisualizerProjectsInput
@@ -638,6 +708,9 @@ export type VisualizerSpaceCreateWithoutClientInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   isFeatured?: boolean
   isActive?: boolean
   createdAt?: Date | string
@@ -655,6 +728,9 @@ export type VisualizerSpaceUncheckedCreateWithoutClientInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   defaultShadeId?: string | null
   isFeatured?: boolean
   isActive?: boolean
@@ -702,6 +778,9 @@ export type VisualizerSpaceScalarWhereInput = {
   imageUrl?: Prisma.StringFilter<"VisualizerSpace"> | string
   thumbnailUrl?: Prisma.StringFilter<"VisualizerSpace"> | string
   maskJson?: Prisma.JsonFilter<"VisualizerSpace">
+  maskStatus?: Prisma.StringFilter<"VisualizerSpace"> | string
+  maskUpdatedAt?: Prisma.DateTimeNullableFilter<"VisualizerSpace"> | Date | string | null
+  maskUpdatedBy?: Prisma.StringNullableFilter<"VisualizerSpace"> | string | null
   defaultShadeId?: Prisma.StringNullableFilter<"VisualizerSpace"> | string | null
   isFeatured?: Prisma.BoolFilter<"VisualizerSpace"> | boolean
   isActive?: Prisma.BoolFilter<"VisualizerSpace"> | boolean
@@ -718,6 +797,9 @@ export type VisualizerSpaceCreateWithoutDefaultShadeInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   isFeatured?: boolean
   isActive?: boolean
   createdAt?: Date | string
@@ -736,6 +818,9 @@ export type VisualizerSpaceUncheckedCreateWithoutDefaultShadeInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   isFeatured?: boolean
   isActive?: boolean
   createdAt?: Date | string
@@ -778,6 +863,9 @@ export type VisualizerSpaceCreateWithoutVisualizerProjectsInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   isFeatured?: boolean
   isActive?: boolean
   createdAt?: Date | string
@@ -796,6 +884,9 @@ export type VisualizerSpaceUncheckedCreateWithoutVisualizerProjectsInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   defaultShadeId?: string | null
   isFeatured?: boolean
   isActive?: boolean
@@ -828,6 +919,9 @@ export type VisualizerSpaceUpdateWithoutVisualizerProjectsInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -846,6 +940,9 @@ export type VisualizerSpaceUncheckedUpdateWithoutVisualizerProjectsInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultShadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -862,6 +959,9 @@ export type VisualizerSpaceCreateManyClientInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   defaultShadeId?: string | null
   isFeatured?: boolean
   isActive?: boolean
@@ -878,6 +978,9 @@ export type VisualizerSpaceUpdateWithoutClientInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -895,6 +998,9 @@ export type VisualizerSpaceUncheckedUpdateWithoutClientInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultShadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -912,6 +1018,9 @@ export type VisualizerSpaceUncheckedUpdateManyWithoutClientInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultShadeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -929,6 +1038,9 @@ export type VisualizerSpaceCreateManyDefaultShadeInput = {
   imageUrl: string
   thumbnailUrl: string
   maskJson: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: string
+  maskUpdatedAt?: Date | string | null
+  maskUpdatedBy?: string | null
   isFeatured?: boolean
   isActive?: boolean
   createdAt?: Date | string
@@ -944,6 +1056,9 @@ export type VisualizerSpaceUpdateWithoutDefaultShadeInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -962,6 +1077,9 @@ export type VisualizerSpaceUncheckedUpdateWithoutDefaultShadeInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -979,6 +1097,9 @@ export type VisualizerSpaceUncheckedUpdateManyWithoutDefaultShadeInput = {
   imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   thumbnailUrl?: Prisma.StringFieldUpdateOperationsInput | string
   maskJson?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  maskStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  maskUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  maskUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1026,6 +1147,9 @@ export type VisualizerSpaceSelect<ExtArgs extends runtime.Types.Extensions.Inter
   imageUrl?: boolean
   thumbnailUrl?: boolean
   maskJson?: boolean
+  maskStatus?: boolean
+  maskUpdatedAt?: boolean
+  maskUpdatedBy?: boolean
   defaultShadeId?: boolean
   isFeatured?: boolean
   isActive?: boolean
@@ -1047,6 +1171,9 @@ export type VisualizerSpaceSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   imageUrl?: boolean
   thumbnailUrl?: boolean
   maskJson?: boolean
+  maskStatus?: boolean
+  maskUpdatedAt?: boolean
+  maskUpdatedBy?: boolean
   defaultShadeId?: boolean
   isFeatured?: boolean
   isActive?: boolean
@@ -1066,6 +1193,9 @@ export type VisualizerSpaceSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   imageUrl?: boolean
   thumbnailUrl?: boolean
   maskJson?: boolean
+  maskStatus?: boolean
+  maskUpdatedAt?: boolean
+  maskUpdatedBy?: boolean
   defaultShadeId?: boolean
   isFeatured?: boolean
   isActive?: boolean
@@ -1085,6 +1215,9 @@ export type VisualizerSpaceSelectScalar = {
   imageUrl?: boolean
   thumbnailUrl?: boolean
   maskJson?: boolean
+  maskStatus?: boolean
+  maskUpdatedAt?: boolean
+  maskUpdatedBy?: boolean
   defaultShadeId?: boolean
   isFeatured?: boolean
   isActive?: boolean
@@ -1092,7 +1225,7 @@ export type VisualizerSpaceSelectScalar = {
   updatedAt?: boolean
 }
 
-export type VisualizerSpaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "name" | "slug" | "roomType" | "space" | "imageUrl" | "thumbnailUrl" | "maskJson" | "defaultShadeId" | "isFeatured" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["visualizerSpace"]>
+export type VisualizerSpaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "name" | "slug" | "roomType" | "space" | "imageUrl" | "thumbnailUrl" | "maskJson" | "maskStatus" | "maskUpdatedAt" | "maskUpdatedBy" | "defaultShadeId" | "isFeatured" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["visualizerSpace"]>
 export type VisualizerSpaceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.ClientDefaultArgs<ExtArgs>
   defaultShade?: boolean | Prisma.VisualizerSpace$defaultShadeArgs<ExtArgs>
@@ -1125,6 +1258,9 @@ export type $VisualizerSpacePayload<ExtArgs extends runtime.Types.Extensions.Int
     imageUrl: string
     thumbnailUrl: string
     maskJson: runtime.JsonValue
+    maskStatus: string
+    maskUpdatedAt: Date | null
+    maskUpdatedBy: string | null
     defaultShadeId: string | null
     isFeatured: boolean
     isActive: boolean
@@ -1565,6 +1701,9 @@ export interface VisualizerSpaceFieldRefs {
   readonly imageUrl: Prisma.FieldRef<"VisualizerSpace", 'String'>
   readonly thumbnailUrl: Prisma.FieldRef<"VisualizerSpace", 'String'>
   readonly maskJson: Prisma.FieldRef<"VisualizerSpace", 'Json'>
+  readonly maskStatus: Prisma.FieldRef<"VisualizerSpace", 'String'>
+  readonly maskUpdatedAt: Prisma.FieldRef<"VisualizerSpace", 'DateTime'>
+  readonly maskUpdatedBy: Prisma.FieldRef<"VisualizerSpace", 'String'>
   readonly defaultShadeId: Prisma.FieldRef<"VisualizerSpace", 'String'>
   readonly isFeatured: Prisma.FieldRef<"VisualizerSpace", 'Boolean'>
   readonly isActive: Prisma.FieldRef<"VisualizerSpace", 'Boolean'>

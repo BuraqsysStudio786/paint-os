@@ -16,7 +16,9 @@ import { useMemo, useRef, useState } from "react";
 import {
   canvasToOriginalPoint,
   createContainViewport,
+  insertPointOnEdge,
   nearestPointIndex,
+  removePoint,
   validateMaskLayer,
 } from "@/lib/visualizer/geometry";
 import {
@@ -30,7 +32,7 @@ import type {
 } from "@/lib/visualizer/types";
 
 type ShadeOption = { id: string; name: string; code?: string };
-type Tool = "select" | "click" | "rectangle" | "polygon";
+type Tool = "select" | "four-point" | "rectangle" | "polygon" | "ai";
 
 async function uploadImage(file: File) {
   const form = new FormData();
@@ -65,7 +67,7 @@ function createLayer(
     points,
     originalImageWidth: documentWidth,
     originalImageHeight: documentHeight,
-    needsReview: source !== "gallery-admin",
+    needsReview: source !== "gallery-approved",
     visible: true,
     locked: false,
   };
@@ -140,7 +142,7 @@ export function AdminVisualizerMaskEditor({
   };
 
   const addLayer = (
-    source: VisualizerMaskLayer["source"] = "gallery-admin",
+    source: VisualizerMaskLayer["source"] = "polygon",
     points: VisualizerPoint[] = [],
     name = `Wall ${document.layers.length + 1}`,
   ) => {
@@ -216,7 +218,7 @@ export function AdminVisualizerMaskEditor({
         ...createLayer(
           width,
           height,
-          mode === "click" ? "click-detect" : "auto-detect",
+          "ai-suggested",
           mask.name || `Detected Wall ${index + 1}`,
           mask.points,
         ),
@@ -256,8 +258,20 @@ export function AdminVisualizerMaskEditor({
       event.currentTarget.setPointerCapture(event.pointerId);
       return;
     }
-    if (tool === "click") {
-      void detectWalls("click", point);
+    if (tool === "four-point") {
+      if (!active || active.source !== "four-point" || (active.points?.length || 0) >= 4) {
+        addLayer("four-point", [point], "Quick Wall");
+        setStatus("Corner 1 of 4 selected.");
+      } else {
+        const points = [...(active.points || []), point].slice(0, 4);
+        updateActive({ points, needsReview: true });
+        setStatus(
+          points.length === 4
+            ? "Four corners selected. Refine points, then validate and approve."
+            : `Corner ${points.length} of 4 selected.`,
+        );
+        if (points.length === 4) setTool("select");
+      }
       return;
     }
     if (tool === "rectangle") {
@@ -267,8 +281,8 @@ export function AdminVisualizerMaskEditor({
       return;
     }
     if (tool === "polygon") {
-      if (!active || active.source !== "gallery-admin") {
-        addLayer("gallery-admin", [point], "Custom Wall");
+      if (!active || active.source !== "polygon") {
+        addLayer("polygon", [point], "Custom Wall");
       } else {
         updateActive({ points: [...(active.points || []), point] });
       }
@@ -305,7 +319,7 @@ export function AdminVisualizerMaskEditor({
     updateActive({
       points,
       needsReview: false,
-      source: "gallery-admin",
+      source: active.source,
     });
     setDocument((current) => ({ ...current, status: "needs_review" }));
   };
@@ -313,7 +327,7 @@ export function AdminVisualizerMaskEditor({
   const onPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
     if (rectangleStart && rectanglePreview.length === 4) {
       const layer = addLayer(
-        "gallery-admin",
+        "rectangle",
         rectanglePreview,
         "Rectangle Wall",
       );
@@ -342,12 +356,41 @@ export function AdminVisualizerMaskEditor({
     }
     setLayers((layers) => layers.map((layer) => ({
       ...layer,
-      source: "gallery-admin",
+      source: "gallery-approved",
       needsReview: false,
       locked: true,
     })));
     setDocument((current) => ({ ...current, status: "approved" }));
     setStatus("Mask approved. Save the visualizer space to publish it.");
+  };
+
+  const addPoint = () => {
+    if (!active?.points || active.locked || active.points.length < 2) return;
+    let longestIndex = 0;
+    let longestDistance = 0;
+    active.points.forEach((point, index) => {
+      const next = active.points?.[(index + 1) % active.points.length];
+      if (!next) return;
+      const distance = Math.hypot(next[0] - point[0], next[1] - point[1]);
+      if (distance > longestDistance) {
+        longestDistance = distance;
+        longestIndex = index;
+      }
+    });
+    const points = insertPointOnEdge(active.points, longestIndex);
+    updateActive({ points, needsReview: true });
+    setSelectedPoint(longestIndex + 1);
+    setDocument((current) => ({ ...current, status: "needs_review" }));
+  };
+
+  const deletePoint = () => {
+    if (selectedPoint === null || !active?.points || active.locked) return;
+    updateActive({
+      points: removePoint(active.points, selectedPoint),
+      needsReview: true,
+    });
+    setSelectedPoint(null);
+    setDocument((current) => ({ ...current, status: "needs_review" }));
   };
 
   const loadDimensions = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -501,18 +544,25 @@ export function AdminVisualizerMaskEditor({
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => setTool("click")}
-              className={`admin-btn-light ${tool === "click" ? "!bg-[#173F32] !text-white" : ""}`}
+              onClick={() => {
+                addLayer("four-point", [], "Quick Wall");
+                setTool("four-point");
+                setStatus("Click the four corners of the wall.");
+              }}
+              className={`admin-btn-light ${tool === "four-point" ? "!bg-[#173F32] !text-white" : ""}`}
             >
-              <MousePointer2 size={14} /> Click Detect
+              <MousePointer2 size={14} /> 4-Point Wall
             </button>
             <button
               type="button"
-              onClick={() => void detectWalls("auto")}
+              onClick={() => {
+                setTool("ai");
+                void detectWalls("auto");
+              }}
               disabled={detecting || !imageUrl}
               className="admin-btn-light disabled:opacity-40"
             >
-              <Sparkles size={14} /> {detecting ? "Detecting…" : "Auto"}
+              <Sparkles size={14} /> {detecting ? "Suggesting…" : "AI Suggest"}
             </button>
             <button
               type="button"
@@ -524,7 +574,7 @@ export function AdminVisualizerMaskEditor({
             <button
               type="button"
               onClick={() => {
-                addLayer("gallery-admin", [], "Custom Wall");
+                addLayer("polygon", [], "Custom Wall");
                 setTool("polygon");
               }}
               className={`admin-btn-light ${tool === "polygon" ? "!bg-[#173F32] !text-white" : ""}`}
@@ -603,19 +653,43 @@ export function AdminVisualizerMaskEditor({
                 >
                   {active.locked ? "Unlock" : "Lock"}
                 </button>
+                <button
+                  type="button"
+                  onClick={addPoint}
+                  className="admin-btn-light"
+                  disabled={active.locked || (active.points?.length || 0) < 2}
+                >
+                  Add point
+                </button>
+                <button
+                  type="button"
+                  onClick={deletePoint}
+                  className="admin-btn-light"
+                  disabled={active.locked || selectedPoint === null}
+                >
+                  Delete point
+                </button>
               </div>
             </div>
           )}
 
           <div className="mt-4 border-t border-black/10 pt-4">
-            <label className="flex items-center justify-between text-xs font-bold">
-              Preview paint
-              <input
-                type="checkbox"
-                checked={preview}
-                onChange={(event) => setPreview(event.target.checked)}
-              />
-            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPreview(false)}
+                className={`admin-btn-light ${!preview ? "!bg-[#173F32] !text-white" : ""}`}
+              >
+                Before
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreview(true)}
+                className={`admin-btn-light ${preview ? "!bg-[#173F32] !text-white" : ""}`}
+              >
+                After
+              </button>
+            </div>
             <label className="mt-3 block text-[10px] font-black uppercase tracking-widest text-black/50">
               Preview colour
               <input
@@ -633,10 +707,11 @@ export function AdminVisualizerMaskEditor({
               Approval status
               <select
                 value={document.status}
-                onChange={(event) => setDocument((current) => ({
-                  ...current,
-                  status: event.target.value as MaskStatus,
-                }))}
+                onChange={(event) => {
+                  const status = event.target.value as MaskStatus;
+                  if (status === "approved") approve();
+                  else setDocument((current) => ({ ...current, status }));
+                }}
                 className="mt-2 w-full border border-black/10 px-3 py-2 text-sm normal-case"
               >
                 <option value="draft">Draft</option>

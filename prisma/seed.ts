@@ -79,7 +79,7 @@ const rgb = (hex: string) => {
 };
 
 async function main() {
-  await prisma.user.upsert({ where: { email: "admin@paintos.local" }, update: {}, create: { name: "Paint OS Admin", email: "admin@paintos.local", passwordHash: await bcrypt.hash("Admin@12345", 12), role: "SUPER_ADMIN" } });
+  const admin = await prisma.user.upsert({ where: { email: "admin@paintos.local" }, update: {}, create: { name: "Paint OS Admin", email: "admin@paintos.local", passwordHash: await bcrypt.hash("Admin@12345", 12), role: "SUPER_ADMIN" } });
   const existing = await prisma.client.findUnique({ where: { slug: "aurora-paints" } });
   if (existing) await prisma.client.delete({ where: { id: existing.id } });
   const client = await prisma.client.create({
@@ -145,7 +145,7 @@ async function main() {
   for (const [i,name] of roomNames.entries()) {
     const space=roomSpaces[i];
     const room=await prisma.room.create({data:{clientId:client.id,name,slug:slug(name),description:`An editorial ${space.toLowerCase()} direction pairing performance with considered colour.`,imageUrl:roomImages[i%roomImages.length],roomType:space,space,dominantColorFamily:createdShades[i].colorFamily,recommendedShadeIdsJson:createdShades.slice(i,i+4).map(s=>s.id),recommendedProductIdsJson:createdProducts.slice(i%4,(i%4)+3).map(p=>p.id),designTips:"Layer one grounding shade with a lighter architectural neutral, then choose the finish around traffic and light.",order:i}});
-    await prisma.visualizerSpace.create({data:{clientId:client.id,name,slug:`${slug(name)}-studio`,roomType:space,space,imageUrl:room.imageUrl,thumbnailUrl:room.imageUrl,maskJson:{version:2,status:"approved",imageWidth:1600,imageHeight:1000,layers:visualizerMasks[i].map(mask=>({...mask,type:"wall",source:"gallery-admin",originalImageWidth:1600,originalImageHeight:1000,needsReview:false,locked:true,visible:true})),masks:visualizerMasks[i]},defaultShadeId:createdShades[i].id,isFeatured:i<4}});
+    await prisma.visualizerSpace.create({data:{clientId:client.id,name,slug:`${slug(name)}-studio`,roomType:space,space,imageUrl:room.imageUrl,thumbnailUrl:room.imageUrl,maskJson:{version:2,status:"approved",imageWidth:1600,imageHeight:1000,layers:visualizerMasks[i].map(mask=>({...mask,type:"wall",source:"gallery-approved",originalImageWidth:1600,originalImageHeight:1000,needsReview:false,locked:true,visible:true})),masks:visualizerMasks[i]},maskStatus:"approved",maskUpdatedAt:new Date(),maskUpdatedBy:admin.id,defaultShadeId:createdShades[i].id,isFeatured:i<4}});
   }
 
   for (const [i,[name,dealerSlug,city,state,area,zipCode,lat,lng]] of dealerRows.entries()) await prisma.dealer.create({data:{clientId:client.id,name,slug:dealerSlug,city,state,area,zipCode,address:`${area}, ${city}`,phone:`0300-11122${i}3`,whatsapp:`9230011122${i}3`,latitude:lat,longitude:lng,managerName:["Saad","Adeel","Naveed","Hassan","Kamran","Bilal","Usman","Faisal","Zain","Tariq","Owais","Hamid"][i],availableProductCategoryIdsJson:[...categoryMap.values()],openingHours:"Mon-Sat 9:00 AM-7:00 PM",isFeatured:i<4}});

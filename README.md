@@ -285,8 +285,8 @@ It supports:
 - Approved, admin-curated gallery layers from `VisualizerSpace.maskJson`
 - Multiple independent wall, ceiling, trim, or custom layers
 - Uploaded JPG/PNG room photos
-- Recommended click-assisted wall selection
-- Auto candidates, rectangle masks, and manual corner polygons
+- Recommended four-corner Quick Wall Select
+- Rectangle masks, custom polygons, and optional AI suggestions
 - Draggable points, point insertion/removal, layer locking, visibility, and deletion
 - Independent shade, finish, blend mode, opacity, contrast, and brightness per layer
 - Shadow-preserving matt, silk, gloss, and texture rendering
@@ -309,7 +309,7 @@ Mask JSON supports:
       "id": "wall-1",
       "name": "Main Wall",
       "type": "wall",
-      "source": "gallery-admin",
+      "source": "gallery-approved",
       "points": [[100,100],[900,120],[880,700],[120,680]],
       "originalImageWidth": 1600,
       "originalImageHeight": 1000,
@@ -337,13 +337,15 @@ Mask JSON supports:
 
 Gallery rooms use accurate, admin-curated polygon masks stored in
 `VisualizerSpace.maskJson`; they do not call AI on every visit.
+Approval is persisted with `maskStatus`, `maskUpdatedAt`, and
+`maskUpdatedBy`; public gallery queries only expose approved, non-empty masks.
 
 Uploaded rooms use:
 
-1. Click-assisted local Python proposals (recommended).
-2. Auto candidates when useful.
-3. Rectangle and manual corner tools, which are always available.
-4. Draggable-point refinement before colour selection.
+1. Four-corner Quick Wall Select (recommended).
+2. Rectangle and custom polygon tools.
+3. Optional local Python mask suggestions.
+4. Draggable-point review and explicit wall acceptance before colour selection.
 
 No paid SAM 2 API is required. Automatic wall detection is AI-assisted and
 must be reviewed; users can move points, add/delete masks, and draw multiple

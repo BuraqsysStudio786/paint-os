@@ -199,6 +199,67 @@ export function validateMaskLayer(layer: VisualizerMaskLayer) {
   return { valid: true, reason: "" };
 }
 
+export function validatePolygon(
+  points: VisualizerPoint[],
+  imageWidth: number,
+  imageHeight: number,
+) {
+  return validateMaskLayer({
+    id: "validation",
+    name: "Wall",
+    type: "wall",
+    source: "polygon",
+    points,
+    originalImageWidth: imageWidth,
+    originalImageHeight: imageHeight,
+    visible: true,
+    locked: false,
+    needsReview: true,
+  });
+}
+
+export function closePolygon(points: VisualizerPoint[]) {
+  if (points.length < 3) return points;
+  const first = points[0];
+  const last = points[points.length - 1];
+  return first[0] === last[0] && first[1] === last[1]
+    ? points.slice(0, -1)
+    : points;
+}
+
+export function insertPointOnEdge(
+  points: VisualizerPoint[],
+  edgeIndex: number,
+  point?: VisualizerPoint,
+) {
+  if (points.length < 2) return points;
+  const start = points[edgeIndex % points.length];
+  const end = points[(edgeIndex + 1) % points.length];
+  const inserted = point || [
+    (start[0] + end[0]) / 2,
+    (start[1] + end[1]) / 2,
+  ] as VisualizerPoint;
+  const result = [...points];
+  result.splice(edgeIndex + 1, 0, inserted);
+  return result;
+}
+
+export function removePoint(points: VisualizerPoint[], index: number) {
+  return points.length <= 3
+    ? points
+    : points.filter((_, pointIndex) => pointIndex !== index);
+}
+
+export function movePoint(
+  points: VisualizerPoint[],
+  index: number,
+  point: VisualizerPoint,
+) {
+  return points.map((current, pointIndex) => (
+    pointIndex === index ? point : current
+  ));
+}
+
 export function nearestPointIndex(
   points: VisualizerPoint[],
   target: VisualizerPoint,
